@@ -10,6 +10,7 @@ defmodule Hntg.Application do
     children = [
       # Starts a worker by calling: Hntg.Worker.start_link(arg)
       # {Hntg.Worker, arg}
+      Hntg.Server
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
