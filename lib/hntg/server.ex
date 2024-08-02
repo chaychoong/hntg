@@ -32,8 +32,18 @@ defmodule Hntg.Server do
     state =
       case Telegram.Client.get_updates(state.offset) do
         {:ok, updates} ->
-          Logger.info("Received updates: #{inspect(updates)}")
-          %{offset: state.offset}
+          updates
+          |> Enum.reduce(0, fn update, _ ->
+            case Hn.Client.process_link(update.text) do
+              {:ok, reply} ->
+                Telegram.Client.send_message(update.chat_id, reply)
+
+              :error ->
+                Telegram.Client.send_message(update.chat_id, "Invalid link")
+            end
+
+            %{offset: update.offset + 1}
+          end)
 
         :timeout ->
           state

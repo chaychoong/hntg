@@ -51,6 +51,18 @@ defmodule Telegram.Client do
     }
   end
 
+  def send_message(chat_id, text) do
+    Req.post!(base_url() <> "sendMessage",
+      headers: [{"Content-Type", "application/json"}],
+      json: %{
+        chat_id: chat_id,
+        text: text,
+        parse_mode: "MarkdownV2"
+      }
+    )
+    |> parse_request()
+  end
+
   defp parse_request(%{status: 200, body: %{"ok" => true, "result" => result}}), do: {:ok, result}
   defp parse_request(req), do: {:error, req}
 end
