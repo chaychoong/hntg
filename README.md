@@ -1,20 +1,32 @@
 # Hntg
 
-**TODO: Add description**
+Simple Telegram bot for converting HN links to sharable messages. A working
+instance of the bot can be found here: [@HNLinkFmtBot](https://t.me/HNLinkFmtBot).
 
-## Installation
+## Development
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `hntg` to your list of dependencies in `mix.exs`:
+Make sure you have at least Elixir 1.15 installed.
 
-```elixir
-def deps do
-  [
-    {:hntg, "~> 0.1.0"}
-  ]
-end
+```sh
+# Clone the repository
+git clone git@github.com:chaychoong/hntg.git
+cd hntg
+
+# Install dependencies
+mix deps.get
+
+# Run the bot in an iex session
+iex -S mix
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/hntg>.
+## Deployment
+
+Run `fly deploy` to deploy the bot to Fly.io. You will need to set the
+`TELEGRAM_BOT_TOKEN` environment variable:
+
+```sh
+fly secrets set TELEGRAM_BOT_TOKEN=your_token_here
+```
+
+If Fly.io is out of the question, you can use the `Dockerfile` to build an OCI
+image and run it however you like.
