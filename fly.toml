@@ -1,0 +1,14 @@
+# fly.toml app configuration file generated for hntg on 2024-08-02T23:00:47+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hntg'
+primary_region = 'sin'
+
+[build]
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
