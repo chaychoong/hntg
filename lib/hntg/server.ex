@@ -10,7 +10,11 @@ defmodule Hntg.Server do
   @poll_interval 0
 
   def start_link(_opts) do
-    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+    if server_enabled?() do
+      GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+    else
+      :ignore
+    end
   end
 
   @impl GenServer
@@ -27,8 +31,6 @@ defmodule Hntg.Server do
 
   @impl GenServer
   def handle_info(:poll, %{offset: offset} = state) do
-    Logger.debug("Polling for updates on offset #{offset}")
-
     new_offset =
       case Telegram.Client.process_updates(offset, &process_update/1) do
         {:ok, last_offset} ->
@@ -69,5 +71,10 @@ defmodule Hntg.Server do
 
   defp schedule_poll do
     Process.send_after(self(), :poll, @poll_interval)
+  end
+
+  defp server_enabled? do
+    Application.get_env(:hntg, __MODULE__, [])
+    |> Keyword.get(:server, true)
   end
 end
