@@ -63,4 +63,9 @@ defmodule Telegram.Client do
        }) do
     %{chat_id: chat_id, text: text, offset: update_id}
   end
+
+  # Ignore other types of updates, such as edited messages
+  defp parse_update_msg(%{"update_id" => update_id}) do
+    %{offset: update_id}
+  end
 end

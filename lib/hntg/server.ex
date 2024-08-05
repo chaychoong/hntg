@@ -54,6 +54,8 @@ defmodule Hntg.Server do
     offset + 1
   end
 
+  defp process_update(%{offset: offset}), do: offset + 1
+
   defp send_telegram_message(chat_id, message) do
     case Telegram.Client.send_message(chat_id, message) do
       {:ok, _} -> :ok
