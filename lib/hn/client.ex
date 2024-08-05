@@ -2,15 +2,13 @@ defmodule Hn.Client do
   @moduledoc """
   A client for interacting with the Hacker News API.
   """
-
-  @hn_api_url "https://hacker-news.firebaseio.com/v0"
   @link_regex ~r{^https://news.ycombinator.com/item\?id=(?<id>\d+)$}
   @escape_regex ~r/([_\[\]()~`>#+=|{}\.!-])/
 
   @spec process_link(String.t()) :: {:ok, String.t()} | {:error, String.t()}
   def process_link(link) do
     with {:ok, id} <- get_id_from_link(link),
-         {:ok, hn_resp} <- fetch_item(id),
+         {:ok, hn_resp} <- Hn.API.fetch_item(id),
          {:ok, reply} <- parse_item(hn_resp, link) do
       {:ok, reply |> String.trim_trailing() |> escape_tg_reserved_chars()}
     else
@@ -24,13 +22,6 @@ defmodule Hn.Client do
     case Regex.named_captures(@link_regex, link) do
       %{"id" => id} -> {:ok, id}
       nil -> :input_error
-    end
-  end
-
-  defp fetch_item(id) do
-    case Req.get("#{@hn_api_url}/item/#{id}.json") do
-      {:ok, %{status: 200, body: body}} -> {:ok, body}
-      _ -> :api_error
     end
   end
 
