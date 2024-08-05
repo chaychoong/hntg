@@ -2,8 +2,8 @@ defmodule Telegram.Client do
   @moduledoc """
   A client for interacting with the Telegram Bot API.
   """
-  @spec get_me() :: {:ok, map()} | {:error, any()}
-  def get_me do
+  @spec get_bot_name() :: {:ok, String.t()} | {:error, any()}
+  def get_bot_name do
     case Telegram.API.get_me() do
       {:ok, %{"username" => botname}} ->
         {:ok, botname}
@@ -13,10 +13,15 @@ defmodule Telegram.Client do
     end
   end
 
-  @spec get_updates(integer()) :: {:ok, list(map())} | {:error, any()}
-  def get_updates(offset) do
+  @spec process_updates(integer(), (map() -> integer())) :: {:ok, integer()} | {:error, any()}
+  def process_updates(offset, callback) do
     with {:ok, updates} <- Telegram.API.get_updates(offset) do
-      {:ok, Enum.map(updates, &parse_update_msg/1)}
+      last_offset =
+        updates
+        |> Stream.map(&parse_update_msg/1)
+        |> Enum.reduce(0, fn update, _acc -> callback.(update) end)
+
+      {:ok, last_offset}
     else
       {:error, :timeout} -> {:error, :timeout}
       {:error, req} -> {:error, req}

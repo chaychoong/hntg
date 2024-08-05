@@ -39,6 +39,7 @@ defmodule Telegram.HttpAPI do
 
     case Req.post(url, opts) do
       {:ok, %{status: 200, body: %{"ok" => true, "result" => result}}} -> {:ok, result}
+      {:error, %Req.TransportError{reason: :timeout}} -> {:error, :timeout}
       {_, req} -> {:error, req}
     end
   end

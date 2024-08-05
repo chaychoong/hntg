@@ -15,7 +15,7 @@ defmodule Hntg.Server do
 
   @impl GenServer
   def init(:ok) do
-    with {:ok, %{"username" => botname}} <- Telegram.Client.get_me() do
+    with {:ok, botname} <- Telegram.Client.get_bot_name() do
       Logger.info("Connected to Telegram as #{botname}")
       schedule_poll()
       {:ok, %{offset: @initial_offset}}
@@ -30,11 +30,15 @@ defmodule Hntg.Server do
     Logger.debug("Polling for updates on offset #{offset}")
 
     new_offset =
-      case Telegram.Client.get_updates(offset) do
-        {:ok, updates} ->
-          Enum.reduce(updates, 0, fn update, _acc -> process_update(update) end)
+      case Telegram.Client.process_updates(offset, &process_update/1) do
+        {:ok, last_offset} ->
+          last_offset
 
         {:error, :timeout} ->
+          offset
+
+        {:error, req} ->
+          Logger.warning("Failed to get updates: #{inspect(req)}")
           offset
       end
 
@@ -45,18 +49,18 @@ defmodule Hntg.Server do
   defp process_update(%{text: text, chat_id: chat_id, offset: offset}) do
     case Hn.Client.process_link(text) do
       {:ok, reply} ->
-        send_telegram_message(chat_id, reply)
+        send_reply(chat_id, reply)
 
       {:error, reason} ->
-        send_telegram_message(chat_id, "Error: #{reason}")
+        send_reply(chat_id, "Error: #{reason}")
     end
 
-    offset + 1
+    process_update(%{offset: offset})
   end
 
   defp process_update(%{offset: offset}), do: offset + 1
 
-  defp send_telegram_message(chat_id, message) do
+  defp send_reply(chat_id, message) do
     case Telegram.Client.send_message(chat_id, message) do
       {:ok, _} -> :ok
       {:error, reason} -> Logger.warning("Failed to send message: #{inspect(reason)}")
