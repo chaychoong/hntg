@@ -6,6 +6,9 @@
 app = 'hntg'
 primary_region = 'sin'
 
+[env]
+  DNS_CLUSTER_QUERY = "hntg.internal"
+
 [build]
 
 [[vm]]
