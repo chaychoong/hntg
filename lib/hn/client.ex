@@ -4,17 +4,29 @@ defmodule Hn.Client do
   """
   @link_regex ~r{^https://news.ycombinator.com/item\?id=(?<id>\d+)$}
   @escape_regex ~r/([_\[\]()~`>#+=|{}\.!-])/
+  @cache_ttl_sec 3_600
 
   @spec process_link(String.t()) :: {:ok, String.t()} | {:error, String.t()}
   def process_link(link) do
     with {:ok, id} <- get_id_from_link(link),
-         {:ok, hn_resp} <- Hn.API.fetch_item(id),
+         {:ok, hn_resp} <- fetch_item(id),
          {:ok, reply} <- parse_item(hn_resp, link) do
       {:ok, reply |> String.trim_trailing() |> escape_tg_reserved_chars()}
     else
       :input_error -> {:error, "Invalid input format"}
       :api_error -> {:error, "Failed to fetch item from HN API"}
       :api_resp_error -> {:error, "Failed to parse response from HN API"}
+    end
+  end
+
+  defp fetch_item(id) do
+    Cachex.fetch(:hn_cache, id, fn id ->
+      {:commit, Hn.API.fetch_item(id), ttl: :timer.seconds(@cache_ttl_sec)}
+    end)
+    |> case do
+      {:ok, {:ok, hn_resp}} -> {:ok, hn_resp}
+      {:commit, {:ok, hn_resp}, _} -> {:ok, hn_resp}
+      _ -> :api_error
     end
   end
 
