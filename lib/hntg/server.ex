@@ -49,13 +49,18 @@ defmodule Hntg.Server do
   end
 
   defp process_update(%{text: text, chat_id: chat_id, offset: offset}) do
-    case Hn.Client.process_link(text) do
-      {:ok, reply} ->
-        send_reply(chat_id, reply)
+    Task.Supervisor.start_child(
+      Hntg.TaskSupervisor,
+      fn ->
+        case Hn.Client.process_link(text) do
+          {:ok, reply} ->
+            send_reply(chat_id, reply)
 
-      {:error, reason} ->
-        send_reply(chat_id, "Error: #{reason}")
-    end
+          {:error, reason} ->
+            send_reply(chat_id, "Error: #{reason}")
+        end
+      end
+    )
 
     process_update(%{offset: offset})
   end

@@ -11,7 +11,8 @@ defmodule Hntg.Application do
       # Starts a worker by calling: Hntg.Worker.start_link(arg)
       # {Hntg.Worker, arg}
       {DNSCluster, query: Application.get_env(:hntg, :dns_cluster_query) || :ignore},
-      Hntg.Server
+      Hntg.Server,
+      {Task.Supervisor, name: Hntg.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
